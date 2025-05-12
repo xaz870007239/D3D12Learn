@@ -27,6 +27,101 @@ ID3D12Fence* gFence = nullptr;
 
 HANDLE gFenceEvent = nullptr;
 
+D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RESOURCE_STATES InPreState, D3D12_RESOURCE_STATES InNextState)
+{
+	D3D12_RESOURCE_BARRIER ResourceBarrier{};
+	memset(&ResourceBarrier, 0, sizeof(D3D12_RESOURCE_BARRIER));
+	ResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	ResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	ResourceBarrier.Transition.pResource = InResource;
+	ResourceBarrier.Transition.StateBefore = InPreState;
+	ResourceBarrier.Transition.StateAfter = InNextState;
+	ResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	return ResourceBarrier;
+}
+
+ID3D12Resource* CreateBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
+{
+	D3D12_HEAP_PROPERTIES HeapProp{};
+	HeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC ResDesc{};
+	ResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	ResDesc.Alignment = 0;
+	ResDesc.Width = InDataLen;
+	ResDesc.Height = 0;
+	ResDesc.DepthOrArraySize = 1;
+	ResDesc.MipLevels = 1;
+	ResDesc.Format = DXGI_FORMAT_UNKNOWN;
+	ResDesc.SampleDesc.Count = 1;
+	ResDesc.SampleDesc.Quality = 0;
+	ResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	ResDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	ID3D12Resource* BufferObject = nullptr;
+
+	HRESULT hResult = gDevice->CreateCommittedResource(
+		&HeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&ResDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&BufferObject)
+	);
+
+	if (FAILED(hResult))
+	{ 
+		return nullptr;
+	}
+
+	ResDesc = BufferObject->GetDesc();
+	UINT64 MemSizeUsed = 0;
+	UINT64 RowSizeInBytes = 0;
+	UINT RowUsed = 0;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT SubresourceFootPrint{};
+	gDevice->GetCopyableFootprints(&ResDesc, 0, 1, 0, &SubresourceFootPrint, &RowUsed, &RowSizeInBytes, &MemSizeUsed);
+
+	ID3D12Resource* TmpBufferObject = nullptr;
+	HeapProp = {};
+	HeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	hResult = gDevice->CreateCommittedResource(
+		&HeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&ResDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&BufferObject)
+	);
+
+	if (FAILED(hResult))
+	{ 
+		return nullptr;
+	}
+
+	// GPU fetch 32bytes once, notice aligment
+	BYTE* pData = nullptr;
+	TmpBufferObject->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+	BYTE* pDestTmpBuffer = reinterpret_cast<BYTE*>(pData + SubresourceFootPrint.Offset);
+
+	const BYTE* pSrcData = reinterpret_cast<BYTE*>(InData);
+	for (UINT i = 0; i < RowUsed; ++i)
+	{
+		memcpy(pDestTmpBuffer + SubresourceFootPrint.Footprint.RowPitch * i, pSrcData + RowSizeInBytes * i, RowSizeInBytes);
+	}
+	TmpBufferObject->Unmap(0, nullptr);
+
+	InCommandList->CopyBufferRegion(BufferObject, 0, TmpBufferObject, 0, SubresourceFootPrint.Footprint.Width);
+	D3D12_RESOURCE_BARRIER Barrier = InitResourceBarrier(
+		BufferObject,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		InFinalResState
+	);
+	InCommandList->ResourceBarrier(1, &Barrier);
+
+	return BufferObject;
+}
+
 ID3D12PipelineState* CreatePSO(ID3D12RootSignature* InRootSignature, D3D12_SHADER_BYTECODE InVertexShader, D3D12_SHADER_BYTECODE InPixelShader)
 {
 	D3D12_INPUT_ELEMENT_DESC VertexDataElementDesc[] =
@@ -212,7 +307,7 @@ bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 	ResDesc.Width = InWidth;
 	ResDesc.Height = InHeight;
 	ResDesc.DepthOrArraySize = 1;
-	ResDesc.MipLevels = 0;
+	ResDesc.MipLevels = 1;
 	ResDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	ResDesc.SampleDesc.Count = 1;
 	ResDesc.SampleDesc.Quality = 0;
@@ -308,20 +403,6 @@ void EndCommandList()
 
 	gFenceValue++;
 	gQueue->Signal(gFence, gFenceValue);
-}
-
-D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RESOURCE_STATES InPreState, D3D12_RESOURCE_STATES InNextState)
-{
-	D3D12_RESOURCE_BARRIER ResourceBarrier{};
-	memset(&ResourceBarrier, 0, sizeof(D3D12_RESOURCE_BARRIER));
-	ResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	ResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	ResourceBarrier.Transition.pResource = InResource;
-	ResourceBarrier.Transition.StateAfter = InNextState;
-	ResourceBarrier.Transition.StateBefore = InPreState;
-	ResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	return ResourceBarrier;
 }
 
 void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)

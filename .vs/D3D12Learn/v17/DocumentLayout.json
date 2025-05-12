@@ -5,6 +5,16 @@
     {
       "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\WINDOWS KITS\\10\\INCLUDE\\10.0.22621.0\\UM\\D3D12.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Res\\Shader\\ndctriangle.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\Res\\Shader\\ndctriangle.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\WINDOWS KITS\\10\\INCLUDE\\10.0.22621.0\\SHARED\\MINWINDEF.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,8 +24,47 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "minwindef.h",
+              "DocumentMoniker": "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\shared\\minwindef.h",
+              "RelativeDocumentMoniker": "..\\..\\..\\Windows Kits\\10\\Include\\10.0.22621.0\\shared\\minwindef.h",
+              "ToolTip": "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\shared\\minwindef.h",
+              "RelativeToolTip": "..\\..\\..\\Windows Kits\\10\\Include\\10.0.22621.0\\shared\\minwindef.h",
+              "ViewState": "AgIAACsAAAAAAAAAAIAwwEYAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-05-12T14:24:25.39Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "d3d12.h",
+              "DocumentMoniker": "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\d3d12.h",
+              "RelativeDocumentMoniker": "..\\..\\..\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\d3d12.h",
+              "ToolTip": "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\d3d12.h",
+              "RelativeToolTip": "..\\..\\..\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\d3d12.h",
+              "ViewState": "AgIAAMEhAAAAAAAAAADgv9shAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-05-12T14:09:34.252Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ndctriangle.hlsl",
+              "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
+              "RelativeDocumentMoniker": "D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
+              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
+              "RelativeToolTip": "D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002777|",
+              "WhenOpened": "2025-05-12T14:08:19.527Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -24,7 +73,7 @@
               "RelativeDocumentMoniker": "D3D12Learn\\main.cpp",
               "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
               "RelativeToolTip": "D3D12Learn\\main.cpp",
-              "ViewState": "AgIAAMYAAAAAAAAAAAAAANgAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAIABAAAAAAAAAAAAAKEBAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-05-12T02:48:24.104Z",
               "EditorCaption": ""
