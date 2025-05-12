@@ -27,6 +27,81 @@ ID3D12Fence* gFence = nullptr;
 
 HANDLE gFenceEvent = nullptr;
 
+ID3D12PipelineState* CreatePSO(ID3D12RootSignature* InRootSignature, D3D12_SHADER_BYTECODE InVertexShader, D3D12_SHADER_BYTECODE InPixelShader)
+{
+	D3D12_INPUT_ELEMENT_DESC VertexDataElementDesc[] =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float) * 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float) * 8, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+	};
+
+	D3D12_INPUT_LAYOUT_DESC InputLayoutDesc{};
+	InputLayoutDesc.NumElements = 3;
+	InputLayoutDesc.pInputElementDescs = VertexDataElementDesc;
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSODesc{};
+	PSODesc.pRootSignature = InRootSignature;
+	PSODesc.InputLayout = InputLayoutDesc;
+	PSODesc.VS = InVertexShader;
+	PSODesc.PS = InPixelShader;
+	PSODesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	PSODesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	PSODesc.SampleDesc.Count = 1;
+	PSODesc.SampleDesc.Quality = 1;
+	PSODesc.SampleMask = 0xffffffff;
+	PSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	PSODesc.NodeMask = gAdapterIndex;
+
+	PSODesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	PSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	PSODesc.RasterizerState.DepthBiasClamp = TRUE;
+	//Option
+	PSODesc.RasterizerState.FrontCounterClockwise = false;
+	PSODesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+	PSODesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+	PSODesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+	PSODesc.RasterizerState.MultisampleEnable = false;
+	PSODesc.RasterizerState.AntialiasedLineEnable = false;
+	PSODesc.RasterizerState.ForcedSampleCount = 0;
+	PSODesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	PSODesc.DepthStencilState.DepthEnable = true;
+	PSODesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	PSODesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	PSODesc.BlendState = { 0 };
+
+	D3D12_RENDER_TARGET_BLEND_DESC RTBlendDesc{
+		FALSE, FALSE, 
+
+		D3D12_BLEND_ONE, 
+		D3D12_BLEND_ZERO, 
+		D3D12_BLEND_OP_ADD,
+
+		D3D12_BLEND_ONE, 
+		D3D12_BLEND_ZERO, 
+		D3D12_BLEND_OP_ADD,	
+
+		D3D12_LOGIC_OP_NOOP,
+		D3D12_COLOR_WRITE_ENABLE_ALL,
+	};
+
+	for (int i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+	{
+		PSODesc.BlendState.RenderTarget[i] = RTBlendDesc;
+	}
+
+	PSODesc.NumRenderTargets = 1;
+
+	ID3D12PipelineState* PSO = nullptr;
+	HRESULT hResult = gDevice->CreateGraphicsPipelineState(&PSODesc, IID_PPV_ARGS(&PSO));
+	if (FAILED(hResult))
+	{
+		return nullptr;
+	}
+
+	return PSO;
+}
+
 LRESULT CALLBACK WndProc(HWND InHWND, UINT InMSG, WPARAM InWParam, LPARAM InLParam)
 {
 	switch (InMSG)
@@ -327,6 +402,20 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	}
 
 	InitD3D12(Hwnd, 1600, 900);
+	float Vertices[] = {
+		-0.5f, -0.5f, 0.5f, 1.0f,	// Pos
+		1.0f, 0.0f, 0.0f, 1.0f,		// color
+		0.0f, 0.0f, 0.0f, 0.0f,		// normal
+
+		0.0f, 0.5f,	0.5f, 1.0f, 
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+
+		0.5f, -0.5f,0.5f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+	};
+
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
 

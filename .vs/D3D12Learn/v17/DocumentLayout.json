@@ -1,9 +1,9 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\ProgramProject\\EngineProject\\D3D12Learn\\",
+  "WorkspaceRootPath": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProject\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
@@ -14,25 +14,17 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{9de31877-5741-4b8b-9f3b-633555d7842b}"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "main.cpp",
-              "DocumentMoniker": "D:\\ProgramProject\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
+              "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
               "RelativeDocumentMoniker": "D3D12Learn\\main.cpp",
-              "ToolTip": "D:\\ProgramProject\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
+              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
               "RelativeToolTip": "D3D12Learn\\main.cpp",
-              "ViewState": "AQIAAKgAAAAAAAAAAAApwCsAAAANAAAA",
+              "ViewState": "AgIAAMYAAAAAAAAAAAAAANgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-05-12T02:48:24.104Z",
               "EditorCaption": ""
