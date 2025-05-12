@@ -1,2 +1,3 @@
 ﻿  main.cpp
+D:\ProgramProject\EngineProject\D3D12Learn\D3D12Learn\main.cpp(272,37): warning C4305: 'initializing': truncation from 'double' to 'const float'
   D3D12Learn.vcxproj -> D:\ProgramProject\EngineProject\D3D12Learn\x64\Debug\D3D12Learn.exe

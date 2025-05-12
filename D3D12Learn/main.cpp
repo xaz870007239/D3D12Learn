@@ -17,7 +17,7 @@ UINT gFenceValue = 0;
 ID3D12Device* gDevice = nullptr;
 ID3D12CommandQueue* gQueue = nullptr;
 ID3D12CommandAllocator* gAllocator = nullptr;
-ID3D12GraphicsCommandList* gList = nullptr;
+ID3D12GraphicsCommandList* gCommandList = nullptr;
 IDXGISwapChain3* gSwapChain = nullptr;
 ID3D12Resource* gDSRT = nullptr;
 ID3D12Resource* gColorRTs[2];
@@ -199,7 +199,7 @@ bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 	gDevice->CreateDepthStencilView(gDSRT, &DSVDesc, gSwapChainDSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	hResult = gDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gAllocator));
-	hResult = gDevice->CreateCommandList(gAdapterIndex, D3D12_COMMAND_LIST_TYPE_DIRECT, gAllocator, nullptr, IID_PPV_ARGS(&gList));
+	hResult = gDevice->CreateCommandList(gAdapterIndex, D3D12_COMMAND_LIST_TYPE_DIRECT, gAllocator, nullptr, IID_PPV_ARGS(&gCommandList));
 	hResult = gDevice->CreateFence(gAdapterIndex, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence));
 	if (FAILED(hResult))
 	{
@@ -226,6 +226,11 @@ void WaitForComplectionOfCommandList()
 
 void EndCommandList()
 {
+	gCommandList->Close();
+
+	ID3D12CommandList* ppCommandList[] = { gCommandList };
+	gQueue->ExecuteCommandLists(1, ppCommandList);
+
 	gFenceValue++;
 	gQueue->Signal(gFence, gFenceValue);
 }
@@ -251,6 +256,22 @@ void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 	InCommandList->ResourceBarrier(1, &Barrier);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE ColorRT;
+	D3D12_CPU_DESCRIPTOR_HANDLE DSRT;
+	DSRT.ptr = gSwapChainDSVHeap->GetCPUDescriptorHandleForHeapStart().ptr;
+	ColorRT.ptr = gSwapChainRTVHeap->GetCPUDescriptorHandleForHeapStart().ptr + gCurrRTIndex * gRTVDescriptorSize;
+	InCommandList->OMSetRenderTargets(1, &ColorRT, FALSE, &DSRT);
+
+	D3D12_VIEWPORT ViewProt = { 0.0f, 0.0f, 1600.0f, 900.0f };
+	D3D12_RECT ScissorRect = { 0, 0, 1600, 900 };
+
+	InCommandList->RSSetViewports(1, &ViewProt);
+	InCommandList->RSSetScissorRects(1, &ScissorRect);
+
+	const float ClearColor[] = { 0.1f, 0.4, 0.6f, 1.0f };
+	InCommandList->ClearRenderTargetView(ColorRT, ClearColor, 0, nullptr);
+	InCommandList->ClearDepthStencilView(DSRT, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 void EndRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
@@ -305,9 +326,9 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 		return -1;
 	}
 
+	InitD3D12(Hwnd, 1600, 900);
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
-	InitD3D12(Hwnd, 1600, 900);
 
 	MSG msg;
 	while (true) 
@@ -331,8 +352,17 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 		else
 		{
 			//Render
-			BeginRenderToSwapChain(gList);
+			WaitForComplectionOfCommandList();
+			gAllocator->Reset();
+			gCommandList->Reset(gAllocator, nullptr);
+			BeginRenderToSwapChain(gCommandList);
+			//...
+			EndRenderToSwapChain(gCommandList);
+			EndCommandList();
+
 			gSwapChain->Present(0, 0);
+
+			
 		}
 	}
 
