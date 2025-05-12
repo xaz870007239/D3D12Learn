@@ -9,6 +9,7 @@ using namespace std;
 
 LPCTSTR gWindowClassName = L"D3D12 App";
 int gAdapterIndex = 0;
+int gCurrRTIndex = 0;
 UINT gRTVDescriptorSize = 0;
 UINT gDSVDescriptorSize = 0;
 UINT gFenceValue = 0;
@@ -16,7 +17,7 @@ UINT gFenceValue = 0;
 ID3D12Device* gDevice = nullptr;
 ID3D12CommandQueue* gQueue = nullptr;
 ID3D12CommandAllocator* gAllocator = nullptr;
-ID3D12CommandList* gList = nullptr;
+ID3D12GraphicsCommandList* gList = nullptr;
 IDXGISwapChain3* gSwapChain = nullptr;
 ID3D12Resource* gDSRT = nullptr;
 ID3D12Resource* gColorRTs[2];
@@ -26,9 +27,9 @@ ID3D12Fence* gFence = nullptr;
 
 HANDLE gFenceEvent = nullptr;
 
-LRESULT CALLBACK WndProc(HWND inHWND, UINT inMSG, WPARAM inWParam, LPARAM inLParam)
+LRESULT CALLBACK WndProc(HWND InHWND, UINT InMSG, WPARAM InWParam, LPARAM InLParam)
 {
-	switch (inMSG)
+	switch (InMSG)
 	{
 	case WM_CLOSE:
 		PostQuitMessage(0);
@@ -37,10 +38,10 @@ LRESULT CALLBACK WndProc(HWND inHWND, UINT inMSG, WPARAM inWParam, LPARAM inLPar
 		break;
 	}
 
-	return DefWindowProc(inHWND, inMSG, inWParam, inLParam);
+	return DefWindowProc(InHWND, InMSG, InWParam, InLParam);
 }
 
-bool InitD3D12(HWND inHWND, int inWidth, int inHeight)
+bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 {
 	HRESULT hResult;
 	UINT dxgiFactoryFlags = 0;
@@ -108,13 +109,13 @@ bool InitD3D12(HWND inHWND, int inWidth, int inHeight)
 
 	DXGI_SWAP_CHAIN_DESC SwapChainDesc{};
 	DXGI_MODE_DESC BufferDesc{};
-	BufferDesc.Width = inWidth;
-	BufferDesc.Height = inHeight;
+	BufferDesc.Width = InWidth;
+	BufferDesc.Height = InHeight;
 	BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	SwapChainDesc.BufferDesc = BufferDesc;
 	SwapChainDesc.BufferCount = 2;
 	SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	SwapChainDesc.OutputWindow = inHWND;
+	SwapChainDesc.OutputWindow = InHWND;
 	SwapChainDesc.SampleDesc.Count = 1;
 	SwapChainDesc.Windowed = true;
 	SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -133,8 +134,8 @@ bool InitD3D12(HWND inHWND, int inWidth, int inHeight)
 	D3D12_RESOURCE_DESC ResDesc{};
 	ResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	ResDesc.Alignment = 0;
-	ResDesc.Width = inWidth;
-	ResDesc.Height = inHeight;
+	ResDesc.Width = InWidth;
+	ResDesc.Height = InHeight;
 	ResDesc.DepthOrArraySize = 1;
 	ResDesc.MipLevels = 0;
 	ResDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -207,6 +208,8 @@ bool InitD3D12(HWND inHWND, int inWidth, int inHeight)
 	
 	gFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
+	gCurrRTIndex = gSwapChain->GetCurrentBackBufferIndex();
+
 	return true;
 }
 
@@ -217,6 +220,8 @@ void WaitForComplectionOfCommandList()
 		gFence->SetEventOnCompletion(gFenceValue, gFenceEvent);
 		WaitForSingleObject(gFenceEvent, INFINITE);
 	}
+	
+	gCurrRTIndex = gSwapChain->GetCurrentBackBufferIndex();
 }
 
 void EndCommandList()
@@ -225,15 +230,46 @@ void EndCommandList()
 	gQueue->Signal(gFence, gFenceValue);
 }
 
+D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RESOURCE_STATES InPreState, D3D12_RESOURCE_STATES InNextState)
+{
+	D3D12_RESOURCE_BARRIER ResourceBarrier{};
+	memset(&ResourceBarrier, 0, sizeof(D3D12_RESOURCE_BARRIER));
+	ResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	ResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	ResourceBarrier.Transition.pResource = InResource;
+	ResourceBarrier.Transition.StateAfter = InNextState;
+	ResourceBarrier.Transition.StateBefore = InPreState;
+	ResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int inShowCmd)
+	return ResourceBarrier;
+}
+
+void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
+{
+	D3D12_RESOURCE_BARRIER Barrier = InitResourceBarrier(
+		gColorRTs[gCurrRTIndex],
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET);
+	InCommandList->ResourceBarrier(1, &Barrier);
+}
+
+void EndRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
+{
+	D3D12_RESOURCE_BARRIER Barrier = InitResourceBarrier(
+		gColorRTs[gCurrRTIndex],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT);
+	InCommandList->ResourceBarrier(1, &Barrier);
+}
+
+int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine, int InShowCmd)
 {
 	WNDCLASSEX WinClassEx{};
 	WinClassEx.cbSize = sizeof(WNDCLASSEX);
 	WinClassEx.style = CS_HREDRAW | CS_VREDRAW;
 	WinClassEx.cbClsExtra = NULL;
 	WinClassEx.cbWndExtra = NULL;
-	WinClassEx.hInstance = hInstance;
+	WinClassEx.hInstance = HInstance;
 	WinClassEx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	WinClassEx.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 	//WinClassEx.hCursor = LoadIcon(NULL, IDC_ARROW);
@@ -261,7 +297,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int ScreenWidth = ViewRect.right - ViewRect.left;
 	int ScreenHeight = ViewRect.bottom - ViewRect.top;
 	HWND Hwnd = CreateWindowEx(NULL, gWindowClassName, L"D3D12 App", WS_OVERLAPPEDWINDOW, 
-		CW_USEDEFAULT, CW_USEDEFAULT, ScreenWidth, ScreenHeight, NULL, NULL, hInstance, NULL);
+		CW_USEDEFAULT, CW_USEDEFAULT, ScreenWidth, ScreenHeight, NULL, NULL, HInstance, NULL);
 
 	if (!Hwnd)
 	{
@@ -269,7 +305,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return -1;
 	}
 
-	ShowWindow(Hwnd, inShowCmd);
+	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
 	InitD3D12(Hwnd, 1600, 900);
 
@@ -295,6 +331,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		else
 		{
 			//Render
+			BeginRenderToSwapChain(gList);
+			gSwapChain->Present(0, 0);
 		}
 	}
 
