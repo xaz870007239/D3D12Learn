@@ -38,7 +38,7 @@ ID3D12RootSignature* InitRootSignature()
 
 	ID3DBlob* Signature = nullptr;
 	ID3DBlob* ErrorMsg = nullptr;
-	HRESULT hResult = D3D12SerializeRootSignature(&RoogSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &Signature, &ErrorMsg);
+	HRESULT hResult = D3D12SerializeRootSignature(&RoogSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &Signature, &ErrorMsg);
 	if (FAILED(hResult))
 	{
 		return nullptr;
@@ -54,12 +54,12 @@ ID3D12RootSignature* InitRootSignature()
 	return RootSignature;
 }
 
-bool CompileShaderFromFile(LPCTSTR InShaderFilePath, const char* InMainFUncName, const char* InTarget, D3D12_SHADER_BYTECODE* InShader)
+bool CreateShaderFromFile(LPCTSTR InShaderFilePath, const char* InMainFUncName, const char* InTarget, D3D12_SHADER_BYTECODE* InShader)
 {
 	ID3DBlob* ShaderBuffer = nullptr;
 	ID3DBlob* ErrorMsg = nullptr;
 	HRESULT hResult = D3DCompileFromFile(InShaderFilePath, nullptr, nullptr, 
-		InMainFUncName, InTarget, D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_VALIDATION,
+		InMainFUncName, InTarget, D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0, &ShaderBuffer, &ErrorMsg);
 	if (FAILED(hResult))
 	{
@@ -173,9 +173,9 @@ ID3D12PipelineState* CreatePSO(ID3D12RootSignature* InRootSignature, D3D12_SHADE
 {
 	D3D12_INPUT_ELEMENT_DESC VertexDataElementDesc[] =
 	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float) * 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float) * 8, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0,					D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, sizeof(float) * 4,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
+		{"NORMAL",	 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, sizeof(float) * 8,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} ,
 	};
 
 	D3D12_INPUT_LAYOUT_DESC InputLayoutDesc{};
@@ -190,7 +190,7 @@ ID3D12PipelineState* CreatePSO(ID3D12RootSignature* InRootSignature, D3D12_SHADE
 	PSODesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	PSODesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	PSODesc.SampleDesc.Count = 1;
-	PSODesc.SampleDesc.Quality = 1;
+	PSODesc.SampleDesc.Quality = 0;
 	PSODesc.SampleMask = 0xffffffff;
 	PSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	PSODesc.NodeMask = gAdapterIndex;
@@ -429,8 +429,6 @@ bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 	
 	gFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	 
-	gCommandList->Close();
-
 	return true;
 }
 
@@ -555,15 +553,31 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 		0.0f, 0.0f, 0.0f, 0.0f
 	};
 
-	BeginCommandList();
 	ID3D12Resource* VBO = CreateVertexBufferObject(gCommandList, VertexDatas, sizeof(VertexDatas), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	if (!VBO)
 	{
 		return - 1;
 	}
 
+	ID3D12RootSignature* RootSignature = InitRootSignature();
+	D3D12_SHADER_BYTECODE VSShaderCode;
+	D3D12_SHADER_BYTECODE PSShaderCode;
+	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "VS_Main", "vs_5_0", &VSShaderCode);
+	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "PS_Main", "ps_5_0", &PSShaderCode);
+	ID3D12PipelineState* PSO = CreatePSO(RootSignature, VSShaderCode, PSShaderCode);
+
 	EndCommandList();
 	WaitForComplectionOfCommandList();
+
+	D3D12_VERTEX_BUFFER_VIEW VBOBUfferView{};
+	VBOBUfferView.BufferLocation = VBO->GetGPUVirtualAddress();
+	VBOBUfferView.SizeInBytes = sizeof(float) * 36;
+	VBOBUfferView.StrideInBytes = sizeof(float) * 12;
+
+	D3D12_VERTEX_BUFFER_VIEW VBOs[] =
+	{
+		VBOBUfferView
+	};
 
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
@@ -593,7 +607,14 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			WaitForComplectionOfCommandList();
 			BeginCommandList();
 			BeginRenderToSwapChain(gCommandList);
+
 			//...
+			gCommandList->SetPipelineState(PSO);
+			gCommandList->SetGraphicsRootSignature(RootSignature);
+			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gCommandList->IASetVertexBuffers(0, 1, VBOs);
+			gCommandList->DrawInstanced(3, 1, 0, 0);
+
 			EndRenderToSwapChain(gCommandList);
 			EndCommandList();
 
