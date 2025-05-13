@@ -12,12 +12,16 @@ struct VSOut
     float4 color : TEXCOORD0;
 };
 
+cbuffer GlobalConstants : register(b0)
+{
+    float4 color;
+};
+
 VSOut VS_Main(VertexData input)
 {
     VSOut output;
     output.position = input.position;
-    output.color = input.position;
-    //output.color = float4(1, 0, 0, 1);
+    output.color = input.texcoord + color;
     return output;
 }
 

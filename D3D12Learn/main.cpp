@@ -35,9 +35,19 @@ HANDLE gFenceEvent = nullptr;
 
 ID3D12RootSignature* InitRootSignature()
 {
+	D3D12_ROOT_PARAMETER _0Parameter{};
+	_0Parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	_0Parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	_0Parameter.Constants.RegisterSpace = 0; // ->b0
+	_0Parameter.Constants.ShaderRegister = 0;
+	_0Parameter.Constants.Num32BitValues = 4;
+
 	D3D12_ROOT_SIGNATURE_DESC RoogSignatureDesc{};
+	RoogSignatureDesc.NumParameters = 1;
+	RoogSignatureDesc.pParameters = &_0Parameter;
 	RoogSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
+	// Store 64 DWORD at most -> 128 WORD -> 16 bit
 	ID3DBlob* Signature = nullptr;
 	ID3DBlob* ErrorMsg = nullptr;
 	HRESULT hResult = D3D12SerializeRootSignature(&RoogSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &Signature, &ErrorMsg);
@@ -584,6 +594,8 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
 
+	float color[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+
 	MSG msg;
 	while (true) 
 	{
@@ -613,6 +625,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			//...
 			gCommandList->SetPipelineState(PSO);
 			gCommandList->SetGraphicsRootSignature(RootSignature);
+			gCommandList->SetGraphicsRoot32BitConstants(0, 4, color, 0);
 			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			gCommandList->IASetVertexBuffers(0, 1, VBOs);
 			gCommandList->DrawInstanced(3, 1, 0, 0);
