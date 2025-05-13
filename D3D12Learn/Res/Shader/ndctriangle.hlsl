@@ -29,7 +29,9 @@ cbuffer DefaultVertexCB : register(b1)
 VSOut VS_Main(VertexData input)
 {
     VSOut output;
-    output.position = mul(ProjectionMatrix, input.position);
+    float4 positionWS = mul(ModelMatrix, input.position);
+    float4 positionVS = mul(ViewMatrix, positionWS);
+    output.position = mul(ProjectionMatrix, positionVS);
     output.color = input.texcoord + color;
     return output;
 }

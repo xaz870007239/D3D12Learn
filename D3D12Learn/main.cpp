@@ -607,15 +607,15 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 
 	StaticMeshComponent StaticMeshComp;
 	StaticMeshComp.SetVertexCount(3);
-	StaticMeshComp.SetVertexPosition(0, -0.5f, -0.5f, 0.5f, 1.0f);
+	StaticMeshComp.SetVertexPosition(0, -0.5f, -0.5f, 0.0f, 1.0f);
 	StaticMeshComp.SetVertexTexcoord(0, 1.0f, 0.0f, 0.0f, 1.0f);
 	StaticMeshComp.SetVertexNormal(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	StaticMeshComp.SetVertexPosition(1, 0.0f, 0.5f, 0.5f, 1.0f);
+	StaticMeshComp.SetVertexPosition(1, 0.0f, 0.5f, 0.0f, 1.0f);
 	StaticMeshComp.SetVertexTexcoord(1, 0.0f, 1.0f, 0.0f, 1.0f);
 	StaticMeshComp.SetVertexNormal(1, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	StaticMeshComp.SetVertexPosition(2, 0.5f, -0.5f, 0.5f, 1.0f);
+	StaticMeshComp.SetVertexPosition(2, 0.5f, -0.5f, 0.0f, 1.0f);
 	StaticMeshComp.SetVertexTexcoord(2, 0.0f, 0.0f, 1.0f, 1.0f);
 	StaticMeshComp.SetVertexNormal(2, 0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -628,20 +628,33 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	StaticMeshComp.InitFromFile(gCommandList, "Res/Shader/ndctriangle.hlsl");
 
 	ID3D12RootSignature* RootSignature = InitRootSignature();
-	D3D12_SHADER_BYTECODE VSShaderCode;
-	D3D12_SHADER_BYTECODE PSShaderCode;
-	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "VS_Main", "vs_5_0", &VSShaderCode);
-	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "PS_Main", "ps_5_0", &PSShaderCode);
-	ID3D12PipelineState* PSO = CreatePSO(RootSignature, VSShaderCode, PSShaderCode);
-	ID3D12Resource* CBV = CreateConstantBufferObject(65535);
-	float Matrix[] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-	};
-	UpdateConstantBuffer(CBV, Matrix, sizeof(float) * 16);
+	D3D12_SHADER_BYTECODE VS;
+	D3D12_SHADER_BYTECODE PS;
+	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "VS_Main", "vs_5_0", &VS);
+	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "PS_Main", "ps_5_0", &PS);
+	ID3D12PipelineState* PSO = CreatePSO(RootSignature, VS, PS);
+	ID3D12Resource* CB = CreateConstantBufferObject(65535);
 
+	DirectX::XMMATRIX ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XMConvertToRadians(45.0f),
+		(float)ViewWidth / (float)ViewHeight,
+		0.1f,
+		100.0f
+	);
+
+	DirectX::XMMATRIX ViewMatrix = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX ModelMatrix = DirectX::XMMatrixTranslation(0.0f, 0.0f, 2.0f);
+	DirectX::XMFLOAT4X4 TmpMatrix;
+	float Matrices[48];
+
+	DirectX::XMStoreFloat4x4(&TmpMatrix, ProjectionMatrix);
+	memcpy(Matrices, &TmpMatrix, sizeof(float) * 16);
+	DirectX::XMStoreFloat4x4(&TmpMatrix, ViewMatrix);
+	memcpy(Matrices + 16, &TmpMatrix, sizeof(float) * 16);
+	DirectX::XMStoreFloat4x4(&TmpMatrix, ModelMatrix);
+	memcpy(Matrices + 32, &TmpMatrix, sizeof(float) * 16);
+
+	UpdateConstantBuffer(CB, Matrices, sizeof(float) * 48);
 	EndCommandList();
 	WaitForComplectionOfCommandList();
 
@@ -686,7 +699,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			gCommandList->SetPipelineState(PSO);
 			gCommandList->SetGraphicsRootSignature(RootSignature);
 			gCommandList->SetGraphicsRoot32BitConstants(0, 4, color, 0);
-			gCommandList->SetGraphicsRootConstantBufferView(1, CBV->GetGPUVirtualAddress());
+			gCommandList->SetGraphicsRootConstantBufferView(1, CB->GetGPUVirtualAddress());
 			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			gCommandList->IASetVertexBuffers(0, 1, VBOs);
 			gCommandList->DrawInstanced(3, 1, 0, 0);
