@@ -35,16 +35,22 @@ HANDLE gFenceEvent = nullptr;
 
 ID3D12RootSignature* InitRootSignature()
 {
-	D3D12_ROOT_PARAMETER _0Parameter{};
-	_0Parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-	_0Parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	_0Parameter.Constants.RegisterSpace = 0; // ->b0
-	_0Parameter.Constants.ShaderRegister = 0;
-	_0Parameter.Constants.Num32BitValues = 4;
+	D3D12_ROOT_PARAMETER RootParameters[2];
+
+	RootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	RootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	RootParameters[0].Constants.RegisterSpace = 0; 
+	RootParameters[0].Constants.ShaderRegister = 0; // ->b0
+	RootParameters[0].Constants.Num32BitValues = 4;
+
+	RootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	RootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	RootParameters[1].Descriptor.RegisterSpace = 0;
+	RootParameters[1].Descriptor.ShaderRegister = 1; // ->b1
 
 	D3D12_ROOT_SIGNATURE_DESC RoogSignatureDesc{};
-	RoogSignatureDesc.NumParameters = 1;
-	RoogSignatureDesc.pParameters = &_0Parameter;
+	RoogSignatureDesc.NumParameters = _countof(RootParameters);
+	RoogSignatureDesc.pParameters = RootParameters;
 	RoogSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// Store 64 DWORD at most -> 128 WORD -> 16 bit
@@ -98,6 +104,52 @@ D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RES
 	ResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	return ResourceBarrier;
+}
+
+ID3D12Resource* CreateConstantBufferObject(int InDataLen)
+{
+	D3D12_HEAP_PROPERTIES HeapProp{};
+	HeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	D3D12_RESOURCE_DESC ResDesc{};
+	ResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	ResDesc.Alignment = 0;
+	ResDesc.Width = InDataLen;
+	ResDesc.Height = 1;
+	ResDesc.DepthOrArraySize = 1;
+	ResDesc.MipLevels = 1;
+	ResDesc.Format = DXGI_FORMAT_UNKNOWN;
+	ResDesc.SampleDesc.Count = 1;
+	ResDesc.SampleDesc.Quality = 0;
+	ResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	ResDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	ID3D12Resource* BufferObject = nullptr;
+
+	HRESULT hResult = gDevice->CreateCommittedResource(
+		&HeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&ResDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&BufferObject)
+	);
+
+	if (FAILED(hResult))
+	{ 
+		return nullptr;
+	}
+
+	return BufferObject;
+}
+
+void UpdateConstantBuffer(ID3D12Resource* InCB, void* InData, int InDataLen)
+{
+	D3D12_RANGE Range{0};
+	unsigned char* pBuffer = nullptr;
+	InCB->Map(0, &Range, reinterpret_cast<void**>(&pBuffer));
+	memcpy(pBuffer, InData, InDataLen);
+	InCB->Unmap(0, nullptr);
 }
 
 ID3D12Resource* CreateVertexBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
@@ -581,6 +633,14 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "VS_Main", "vs_5_0", &VSShaderCode);
 	CreateShaderFromFile(L"Res/Shader/ndctriangle.hlsl", "PS_Main", "ps_5_0", &PSShaderCode);
 	ID3D12PipelineState* PSO = CreatePSO(RootSignature, VSShaderCode, PSShaderCode);
+	ID3D12Resource* CBV = CreateConstantBufferObject(65535);
+	float Matrix[] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	UpdateConstantBuffer(CBV, Matrix, sizeof(float) * 16);
 
 	EndCommandList();
 	WaitForComplectionOfCommandList();
@@ -626,6 +686,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			gCommandList->SetPipelineState(PSO);
 			gCommandList->SetGraphicsRootSignature(RootSignature);
 			gCommandList->SetGraphicsRoot32BitConstants(0, 4, color, 0);
+			gCommandList->SetGraphicsRootConstantBufferView(1, CBV->GetGPUVirtualAddress());
 			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			gCommandList->IASetVertexBuffers(0, 1, VBOs);
 			gCommandList->DrawInstanced(3, 1, 0, 0);
