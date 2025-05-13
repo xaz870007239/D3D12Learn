@@ -1,9 +1,13 @@
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <stdio.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 using namespace std;
 
@@ -26,6 +30,49 @@ ID3D12DescriptorHeap* gSwapChainDSVHeap = nullptr;
 ID3D12Fence* gFence = nullptr;
 
 HANDLE gFenceEvent = nullptr;
+
+ID3D12RootSignature* InitRootSignature()
+{
+	D3D12_ROOT_SIGNATURE_DESC RoogSignatureDesc{};
+	RoogSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* Signature = nullptr;
+	ID3DBlob* ErrorMsg = nullptr;
+	HRESULT hResult = D3D12SerializeRootSignature(&RoogSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &Signature, &ErrorMsg);
+	if (FAILED(hResult))
+	{
+		return nullptr;
+	}
+
+	ID3D12RootSignature* RootSignature = nullptr;
+	hResult = gDevice->CreateRootSignature(gAdapterIndex, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature));
+	if (FAILED(hResult))
+	{
+		return nullptr;
+	}
+
+	return RootSignature;
+}
+
+bool CompileShaderFromFile(LPCTSTR InShaderFilePath, const char* InMainFUncName, const char* InTarget, D3D12_SHADER_BYTECODE* InShader)
+{
+	ID3DBlob* ShaderBuffer = nullptr;
+	ID3DBlob* ErrorMsg = nullptr;
+	HRESULT hResult = D3DCompileFromFile(InShaderFilePath, nullptr, nullptr, 
+		InMainFUncName, InTarget, D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_VALIDATION,
+		0, &ShaderBuffer, &ErrorMsg);
+	if (FAILED(hResult))
+	{
+		printf("CompileShaderFromFile error: [%s][%s]:[%s]\n", InMainFUncName, InTarget, (char*)ErrorMsg->GetBufferPointer());
+		ErrorMsg->Release();
+		return false;
+	}
+
+	InShader->pShaderBytecode = ShaderBuffer->GetBufferPointer();
+	InShader->BytecodeLength = ShaderBuffer->GetBufferSize();
+
+	return true;
+}
 
 D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RESOURCE_STATES InPreState, D3D12_RESOURCE_STATES InNextState)
 {
@@ -425,7 +472,7 @@ void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
 	InCommandList->RSSetViewports(1, &ViewProt);
 	InCommandList->RSSetScissorRects(1, &ScissorRect);
 
-	const float ClearColor[] = { 0.1f, 0.4, 0.6f, 1.0f };
+	const float ClearColor[] = { 0.1f, 0.4f, 0.6f, 1.0f };
 	InCommandList->ClearRenderTargetView(ColorRT, ClearColor, 0, nullptr);
 	InCommandList->ClearDepthStencilView(DSRT, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
