@@ -557,13 +557,27 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	StaticMeshComp.SetVertexTexcoord(2, 0.0f, 0.0f, 1.0f, 1.0f);
 	StaticMeshComp.SetVertexNormal(2, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	StaticMeshComp.mVBO = CreateVertexBufferObject(
-		gCommandList, 
-		StaticMeshComp.mVertexData, 
-		sizeof(StaticMeshComponnentVertexData) * StaticMeshComp.mVertexCount,
-		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-	StaticMeshComp.InitFromFile(gCommandList, "Res/Shader/ndctriangle.hlsl");
+
+	//float VertexDatas[] = {
+	//	-0.5f, -0.5f, 0.5f, 1.0f,	// Pos
+	//	1.0f, 0.0f, 0.0f, 1.0f,		// color
+	//	0.0f, 0.0f, 0.0f, 0.0f,		// normal
+
+	//	0.0f, 0.5f,	0.5f, 1.0f, 
+	//	0.0f, 1.0f, 0.0f, 1.0f,
+	//	0.0f, 0.0f, 0.0f, 0.0f,
+
+	//	0.5f, -0.5f,0.5f, 1.0f,
+	//	0.0f, 0.0f, 1.0f, 1.0f,
+	//	0.0f, 0.0f, 0.0f, 0.0f
+	//};
+
+	ID3D12Resource* VBO = CreateVertexBufferObject(gCommandList, VertexDatas, sizeof(VertexDatas), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	if (!VBO)
+	{
+		return - 1;
+	}
 
 	ID3D12RootSignature* RootSignature = InitRootSignature();
 	D3D12_SHADER_BYTECODE VSShaderCode;
@@ -575,10 +589,14 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	EndCommandList();
 	WaitForComplectionOfCommandList();
 
+	D3D12_VERTEX_BUFFER_VIEW VBOBUfferView{};
+	VBOBUfferView.BufferLocation = VBO->GetGPUVirtualAddress();
+	VBOBUfferView.SizeInBytes = sizeof(float) * 36;
+	VBOBUfferView.StrideInBytes = sizeof(float) * 12;
 
 	D3D12_VERTEX_BUFFER_VIEW VBOs[] =
 	{
-		StaticMeshComp.mVBOView
+		VBOBUfferView
 	};
 
 	ShowWindow(Hwnd, InShowCmd);
