@@ -88,7 +88,7 @@ D3D12_RESOURCE_BARRIER InitResourceBarrier(ID3D12Resource* InResource, D3D12_RES
 	return ResourceBarrier;
 }
 
-ID3D12Resource* CreateBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
+ID3D12Resource* CreateVertexBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
 {
 	D3D12_HEAP_PROPERTIES HeapProp{};
 	HeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -97,7 +97,7 @@ ID3D12Resource* CreateBufferObject(ID3D12GraphicsCommandList* InCommandList, voi
 	ResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	ResDesc.Alignment = 0;
 	ResDesc.Width = InDataLen;
-	ResDesc.Height = 0;
+	ResDesc.Height = 1;
 	ResDesc.DepthOrArraySize = 1;
 	ResDesc.MipLevels = 1;
 	ResDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -138,7 +138,7 @@ ID3D12Resource* CreateBufferObject(ID3D12GraphicsCommandList* InCommandList, voi
 		&ResDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&BufferObject)
+		IID_PPV_ARGS(&TmpBufferObject)
 	);
 
 	if (FAILED(hResult))
@@ -269,6 +269,10 @@ bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 		{
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+		}
+		else 
+		{
+			MessageBox(nullptr, L"D3D12 Debug Layer is missing!", L"Error", MB_OK);
 		}
 	}
 #endif
@@ -424,8 +428,8 @@ bool InitD3D12(HWND InHWND, int InWidth, int InHeight)
 	}
 	
 	gFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
-	gCurrRTIndex = gSwapChain->GetCurrentBackBufferIndex();
+	 
+	gCommandList->Close();
 
 	return true;
 }
@@ -438,7 +442,12 @@ void WaitForComplectionOfCommandList()
 		WaitForSingleObject(gFenceEvent, INFINITE);
 	}
 	
-	gCurrRTIndex = gSwapChain->GetCurrentBackBufferIndex();
+}
+
+void BeginCommandList()
+{
+	gAllocator->Reset();
+	gCommandList->Reset(gAllocator, nullptr);
 }
 
 void EndCommandList()
@@ -454,6 +463,8 @@ void EndCommandList()
 
 void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
 {
+	gCurrRTIndex = gSwapChain->GetCurrentBackBufferIndex();
+
 	D3D12_RESOURCE_BARRIER Barrier = InitResourceBarrier(
 		gColorRTs[gCurrRTIndex],
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -530,7 +541,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	}
 
 	InitD3D12(Hwnd, 1600, 900);
-	float Vertices[] = {
+	float VertexDatas[] = {
 		-0.5f, -0.5f, 0.5f, 1.0f,	// Pos
 		1.0f, 0.0f, 0.0f, 1.0f,		// color
 		0.0f, 0.0f, 0.0f, 0.0f,		// normal
@@ -541,8 +552,18 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 
 		0.5f, -0.5f,0.5f, 1.0f,
 		0.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f
 	};
+
+	BeginCommandList();
+	ID3D12Resource* VBO = CreateVertexBufferObject(gCommandList, VertexDatas, sizeof(VertexDatas), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	if (!VBO)
+	{
+		return - 1;
+	}
+
+	EndCommandList();
+	WaitForComplectionOfCommandList();
 
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
@@ -570,16 +591,13 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 		{
 			//Render
 			WaitForComplectionOfCommandList();
-			gAllocator->Reset();
-			gCommandList->Reset(gAllocator, nullptr);
+			BeginCommandList();
 			BeginRenderToSwapChain(gCommandList);
 			//...
 			EndRenderToSwapChain(gCommandList);
 			EndCommandList();
 
 			gSwapChain->Present(0, 0);
-
-			
 		}
 	}
 
