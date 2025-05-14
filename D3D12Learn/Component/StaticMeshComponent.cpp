@@ -5,59 +5,6 @@
 
 void StaticMeshComponent::InitFromFile(ID3D12GraphicsCommandList* InCommandList, const char* InFilePath)
 {
-	//FILE* pFile = nullptr;
-	//errno_t Error = fopen_s(&pFile, InFilePath, "rb");
-	//if (Error == 0)
-	//{
-	//	int Tmp = 0;
-	//	fread(&Tmp, sizeof(int), 1, pFile);
-	//	mVertexCount = Tmp;
-	//	mVertexData = new StaticMeshComponentVertexData[mVertexCount];
-	//	fread(mVertexData, 1, sizeof(StaticMeshComponentVertexData) * mVertexCount, pFile);
-	//	mVBO = CreateBufferObject(
-	//		InCommandList, 
-	//		mVertexData,
-	//		sizeof(StaticMeshComponentVertexData) * mVertexCount,
-	//		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-	//	);
-
-	//	mVBOView.BufferLocation = mVBO->GetGPUVirtualAddress();
-	//	mVBOView.SizeInBytes = sizeof(StaticMeshComponentVertexData) * 3;
-	//	mVBOView.StrideInBytes = sizeof(StaticMeshComponentVertexData);
-
-	//	while (!feof(pFile))
-	//	{
-	//		fread(&Tmp, 4, 1, pFile);
-	//		if (feof(pFile))
-	//		{
-	//			break;
-	//		}
-
-	//		char Name[256] = { 0 };
-	//		fread(Name, 1, Tmp, pFile);
-	//		fread(&Tmp, 4, 1, pFile);
-
-	//		SubMesh* SM = new SubMesh();
-	//		SM->mIndexCount = Tmp;
-	//		unsigned int* Indexes = new unsigned int[Tmp];
-	//		fread(Indexes, 1, sizeof(unsigned int) * Tmp, pFile);
-	//		SM->mIBO = CreateBufferObject(
-	//			InCommandList,
-	//			Indexes,
-	//			sizeof(unsigned int) * Tmp,
-	//			D3D12_RESOURCE_STATE_INDEX_BUFFER
-	//		);
-
-	//		SM->mIBV.BufferLocation = SM->mIBO->GetGPUVirtualAddress();
-	//		SM->mIBV.SizeInBytes = sizeof(unsigned int) * 3;
-	//		SM->mIBV.Format = DXGI_FORMAT_R32_UINT;
-
-	//		mSubMeshes.insert(make_pair(Name, SM));
-	//		delete[] Indexes;
-	//	}
-	//	fclose(pFile);
-	//}
-
 	FILE* pFile = nullptr;
 	errno_t err = fopen_s(&pFile, InFilePath, "rb");
 	if (err == 0) {
