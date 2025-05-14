@@ -152,7 +152,7 @@ void UpdateConstantBuffer(ID3D12Resource* InCB, void* InData, int InDataLen)
 	InCB->Unmap(0, nullptr);
 }
 
-ID3D12Resource* CreateVertexBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
+ID3D12Resource* CreateBufferObject(ID3D12GraphicsCommandList* InCommandList, void* InData, int InDataLen, D3D12_RESOURCE_STATES InFinalResState)
 {
 	D3D12_HEAP_PROPERTIES HeapProp{};
 	HeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -619,11 +619,24 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	StaticMeshComp.SetVertexTexcoord(2, 0.0f, 0.0f, 1.0f, 1.0f);
 	StaticMeshComp.SetVertexNormal(2, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	StaticMeshComp.mVBO = CreateVertexBufferObject(
+	unsigned int indexes[] = {0, 1, 2};
+
+	StaticMeshComp.mVBO = CreateBufferObject(
 		gCommandList, 
-		StaticMeshComp.mVertexData, 
+		StaticMeshComp.mVertexData,
 		sizeof(StaticMeshComponnentVertexData) * StaticMeshComp.mVertexCount,
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+	ID3D12Resource* IBO = CreateBufferObject(
+		gCommandList, 
+		indexes,
+		sizeof(unsigned int) * 3,
+		D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+	D3D12_INDEX_BUFFER_VIEW IBOView;
+	IBOView.BufferLocation = IBO->GetGPUVirtualAddress();
+	IBOView.SizeInBytes = sizeof(unsigned int) * 3;
+	IBOView.Format = DXGI_FORMAT_R32_UINT;
 
 	StaticMeshComp.InitFromFile(gCommandList, "Res/Shader/ndctriangle.hlsl");
 
@@ -702,7 +715,9 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			gCommandList->SetGraphicsRootConstantBufferView(1, CB->GetGPUVirtualAddress());
 			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			gCommandList->IASetVertexBuffers(0, 1, VBOs);
-			gCommandList->DrawInstanced(3, 1, 0, 0);
+			gCommandList->IASetIndexBuffer(&IBOView);
+			gCommandList->DrawIndexedInstanced(_countof(indexes), 1, 0, 0, 0);
+			//gCommandList->DrawInstanced(3, 1, 0, 0);
 
 			EndRenderToSwapChain(gCommandList);
 			EndCommandList();
