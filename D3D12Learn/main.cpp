@@ -1,10 +1,6 @@
 #include <Windows.h>
-#include <d3d12.h>
-#include <dxgi1_4.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include <stdio.h>
 
+#include "DirectXHelper.h"
 #include "Component/StaticMeshComponent.h"
 
 #pragma comment(lib, "d3d12.lib")
@@ -606,39 +602,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	InitD3D12(Hwnd, 1600, 900);
 
 	StaticMeshComponent StaticMeshComp;
-	StaticMeshComp.SetVertexCount(3);
-	StaticMeshComp.SetVertexPosition(0, -0.5f, -0.5f, 0.0f, 1.0f);
-	StaticMeshComp.SetVertexTexcoord(0, 1.0f, 0.0f, 0.0f, 1.0f);
-	StaticMeshComp.SetVertexNormal(0, 0.0f, 0.0f, 0.0f, 0.0f);
-
-	StaticMeshComp.SetVertexPosition(1, 0.0f, 0.5f, 0.0f, 1.0f);
-	StaticMeshComp.SetVertexTexcoord(1, 0.0f, 1.0f, 0.0f, 1.0f);
-	StaticMeshComp.SetVertexNormal(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-	StaticMeshComp.SetVertexPosition(2, 0.5f, -0.5f, 0.0f, 1.0f);
-	StaticMeshComp.SetVertexTexcoord(2, 0.0f, 0.0f, 1.0f, 1.0f);
-	StaticMeshComp.SetVertexNormal(2, 0.0f, 0.0f, 0.0f, 0.0f);
-
-	unsigned int indexes[] = {0, 1, 2};
-
-	StaticMeshComp.mVBO = CreateBufferObject(
-		gCommandList, 
-		StaticMeshComp.mVertexData,
-		sizeof(StaticMeshComponnentVertexData) * StaticMeshComp.mVertexCount,
-		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-	ID3D12Resource* IBO = CreateBufferObject(
-		gCommandList, 
-		indexes,
-		sizeof(unsigned int) * 3,
-		D3D12_RESOURCE_STATE_INDEX_BUFFER);
-
-	D3D12_INDEX_BUFFER_VIEW IBOView;
-	IBOView.BufferLocation = IBO->GetGPUVirtualAddress();
-	IBOView.SizeInBytes = sizeof(unsigned int) * 3;
-	IBOView.Format = DXGI_FORMAT_R32_UINT;
-
-	StaticMeshComp.InitFromFile(gCommandList, "Res/Shader/ndctriangle.hlsl");
+	StaticMeshComp.InitFromFile(gCommandList, "Res/Model/Sphere.lhsm");
 
 	ID3D12RootSignature* RootSignature = InitRootSignature();
 	D3D12_SHADER_BYTECODE VS;
@@ -656,7 +620,7 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	);
 
 	DirectX::XMMATRIX ViewMatrix = DirectX::XMMatrixIdentity();
-	DirectX::XMMATRIX ModelMatrix = DirectX::XMMatrixTranslation(0.0f, 0.0f, 2.0f);
+	DirectX::XMMATRIX ModelMatrix = DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f);
 	DirectX::XMFLOAT4X4 TmpMatrix;
 	float Matrices[48];
 
@@ -715,8 +679,11 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			gCommandList->SetGraphicsRootConstantBufferView(1, CB->GetGPUVirtualAddress());
 			gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			gCommandList->IASetVertexBuffers(0, 1, VBOs);
-			gCommandList->IASetIndexBuffer(&IBOView);
-			gCommandList->DrawIndexedInstanced(_countof(indexes), 1, 0, 0, 0);
+			for (auto Iter = StaticMeshComp.mSubMeshes.begin(); Iter != StaticMeshComp.mSubMeshes.end(); ++Iter)
+			{
+				gCommandList->IASetIndexBuffer(&Iter->second->mIBV);
+				gCommandList->DrawIndexedInstanced(Iter->second->mIndexCount, 1, 0, 0, 0);
+			}
 			//gCommandList->DrawInstanced(3, 1, 0, 0);
 
 			EndRenderToSwapChain(gCommandList);

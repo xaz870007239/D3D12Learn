@@ -1,13 +1,24 @@
 #pragma once
 
 #include <d3d12.h>
+#include <unordered_map>
+#include <string>
 
-struct StaticMeshComponnentVertexData
+using namespace std;
+
+struct StaticMeshComponentVertexData
 {
 	float mPosition[4];
 	float mTexcoord[4];
 	float mNormal[4];
 	float mTangent[4];
+};
+
+struct SubMesh
+{	
+	int mIndexCount;
+	ID3D12Resource* mIBO;
+	D3D12_INDEX_BUFFER_VIEW mIBV;
 };
 
 class StaticMeshComponent
@@ -23,6 +34,8 @@ public:
 
 	ID3D12Resource* mVBO;
 	D3D12_VERTEX_BUFFER_VIEW mVBOView;
-	StaticMeshComponnentVertexData* mVertexData;
+	StaticMeshComponentVertexData* mVertexData;
 	int mVertexCount;
+
+	unordered_map<string, SubMesh*> mSubMeshes;
 };

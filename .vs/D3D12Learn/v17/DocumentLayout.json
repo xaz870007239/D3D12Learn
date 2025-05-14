@@ -15,6 +15,14 @@
       "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\Component\\StaticMeshComponent.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\DirectXHelper.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{01CC6F75-79AC-486E-9123-F53BDA9A08D8}|D3D12Learn\\D3D12Learn.vcxproj|solutionrelative:D3D12Learn\\DirectXHelper.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Res\\Shader\\ndctriangle.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:D3D12Learn\\Res\\Shader\\ndctriangle.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
@@ -26,11 +34,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "ndctriangle.hlsl",
               "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
               "RelativeDocumentMoniker": "D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
@@ -38,7 +46,8 @@
               "RelativeToolTip": "D3D12Learn\\Res\\Shader\\ndctriangle.hlsl",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002777|",
-              "WhenOpened": "2025-05-13T13:50:51.603Z"
+              "WhenOpened": "2025-05-13T13:50:51.603Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -48,9 +57,10 @@
               "RelativeDocumentMoniker": "D3D12Learn\\Component\\StaticMeshComponent.cpp",
               "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Component\\StaticMeshComponent.cpp",
               "RelativeToolTip": "D3D12Learn\\Component\\StaticMeshComponent.cpp",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAkAAAAnAAAA",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAAAGYAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-05-13T12:52:24.554Z"
+              "WhenOpened": "2025-05-13T12:52:24.554Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -60,9 +70,36 @@
               "RelativeDocumentMoniker": "D3D12Learn\\Component\\StaticMeshComponent.h",
               "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\Component\\StaticMeshComponent.h",
               "RelativeToolTip": "D3D12Learn\\Component\\StaticMeshComponent.h",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAHAAAA",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-05-13T12:52:24.08Z"
+              "WhenOpened": "2025-05-13T12:52:24.08Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "DirectXHelper.cpp",
+              "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.cpp",
+              "RelativeDocumentMoniker": "D3D12Learn\\DirectXHelper.cpp",
+              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.cpp",
+              "RelativeToolTip": "D3D12Learn\\DirectXHelper.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-05-14T14:56:44.58Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DirectXHelper.h",
+              "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.h",
+              "RelativeDocumentMoniker": "D3D12Learn\\DirectXHelper.h",
+              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\DirectXHelper.h",
+              "RelativeToolTip": "D3D12Learn\\DirectXHelper.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-05-14T14:56:42.041Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -70,9 +107,9 @@
               "Title": "main.cpp",
               "DocumentMoniker": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
               "RelativeDocumentMoniker": "D3D12Learn\\main.cpp",
-              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp",
-              "RelativeToolTip": "D3D12Learn\\main.cpp",
-              "ViewState": "AgIAAFACAAAAAAAAAAApwHECAAACAAAAAAAAAA==",
+              "ToolTip": "D:\\ProgramProjcets\\EngineProject\\D3D12Learn\\D3D12Learn\\main.cpp*",
+              "RelativeToolTip": "D3D12Learn\\main.cpp*",
+              "ViewState": "AgIAAFECAAAAAAAAAAAiwG4CAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-05-12T02:48:24.104Z",
               "EditorCaption": ""
