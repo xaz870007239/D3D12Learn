@@ -1,27 +1,27 @@
 #include <stdio.h>
 
-#include "../DirectXHelper.h"
 #include "StaticMeshComponent.h"
+#include "../DirectXHelper.h"
 
 void StaticMeshComponent::InitFromFile(ID3D12GraphicsCommandList* InCommandList, const char* InFilePath)
 {
 	FILE* pFile = nullptr;
-	errno_t err = fopen_s(&pFile, InFilePath, "rb");
-	if (err == 0) {
+	errno_t Error = fopen_s(&pFile, InFilePath, "rb");
+	if (Error == 0) {
 		int Tmp = 0;
 		fread(&Tmp, 4, 1, pFile);
 		mVertexCount = Tmp;
 		mVertexData = new StaticMeshComponentVertexData[mVertexCount];
 		fread(mVertexData, 1, sizeof(StaticMeshComponentVertexData) * mVertexCount, pFile);
-		mVBO=CreateBufferObject(
+		mVBO = CreateBufferObject(
 			InCommandList,
 			mVertexData,
 			sizeof(StaticMeshComponentVertexData) * mVertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 		);
-		mVBOView.BufferLocation = mVBO->GetGPUVirtualAddress();
-		mVBOView.SizeInBytes = sizeof(StaticMeshComponentVertexData) * mVertexCount;
-		mVBOView.StrideInBytes = sizeof(StaticMeshComponentVertexData);
+		mVBV.BufferLocation = mVBO->GetGPUVirtualAddress();
+		mVBV.SizeInBytes = sizeof(StaticMeshComponentVertexData) * mVertexCount;
+		mVBV.StrideInBytes = sizeof(StaticMeshComponentVertexData);
 
 		while (!feof(pFile)) {
 			fread(&Tmp, 4, 1, pFile);

@@ -32,10 +32,10 @@ public:
 	void SetVertexNormal(int InIndex, float InX, float InY, float InZ, float InW);
 	void SetVertexTangent(int InIndex, float InX, float InY, float InZ, float InW);
 
-	ID3D12Resource* mVBO;
-	D3D12_VERTEX_BUFFER_VIEW mVBOView;
-	StaticMeshComponentVertexData* mVertexData;
 	int mVertexCount;
+	ID3D12Resource* mVBO;
+	D3D12_VERTEX_BUFFER_VIEW mVBV;
+	StaticMeshComponentVertexData* mVertexData;
 
 	unordered_map<string, SubMesh*> mSubMeshes;
 };
