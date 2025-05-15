@@ -534,7 +534,7 @@ void BeginRenderToSwapChain(ID3D12GraphicsCommandList* InCommandList)
 	InCommandList->RSSetViewports(1, &ViewProt);
 	InCommandList->RSSetScissorRects(1, &ScissorRect);
 
-	const float ClearColor[] = { 0.1f, 0.4f, 0.6f, 1.0f };
+	const float ClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	InCommandList->ClearRenderTargetView(ColorRT, ClearColor, 0, nullptr);
 	InCommandList->ClearDepthStencilView(DSRT, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }

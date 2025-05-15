@@ -24,7 +24,7 @@ cbuffer DefaultVertexCB : register(b1)
     float4x4 ProjectionMatrix;
     float4x4 ViewMatrix;
     float4x4 ModelMatrix;
-    float4x4 ITMatrix;
+    float4x4 IT_ModelMatrix;
     float4x4 ReservedMemory[1020];
 };
 
@@ -34,7 +34,7 @@ VSOut VS_Main(VertexData input)
     float4 positionWS = mul(ModelMatrix, input.position);
     float4 positionVS = mul(ViewMatrix, positionWS);
     output.position = mul(ProjectionMatrix, positionVS);
-    output.normal = input.normal;
+    output.normal = mul(IT_ModelMatrix, input.normal);
     return output;
 }
 
@@ -48,7 +48,9 @@ float4 PS_Main(VSOut input) : SV_TARGET
     theta /= PI;
     theta += 0.5f;
 
-    float3 ambientColor = lerp(bottomColor, topColor, theta);
+    float itensity = 0.2f;
+
+    float3 ambientColor = lerp(bottomColor, topColor, theta) * itensity;
     float3 diffuseColor = float3(0.0f, 0.0f, 0.0f);
     float3 specularColor = float3(0.0f, 0.0f, 0.0f);
     float3 surfaceColor = ambientColor + diffuseColor + specularColor;

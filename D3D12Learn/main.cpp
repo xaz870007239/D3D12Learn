@@ -83,34 +83,41 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 	ID3D12PipelineState* PSO = CreatePSO(RootSignature, VS, PS);
 	ID3D12Resource* CB = CreateConstantBufferObject(65535);
 
+
+	DirectX::XMFLOAT4X4 TmpMatrix;
+	float Matrices[16 * 4];
+
 	DirectX::XMMATRIX ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
 		DirectX::XMConvertToRadians(45.0f),
 		(float)ViewWidth / (float)ViewHeight,
 		0.1f,
 		100.0f
 	);
+	DirectX::XMStoreFloat4x4(&TmpMatrix, ProjectionMatrix);
+	memcpy(Matrices + 16 * 0, &TmpMatrix, sizeof(float) * 16);
 
 	DirectX::XMMATRIX ViewMatrix = DirectX::XMMatrixIdentity();
-	DirectX::XMMATRIX ModelMatrix = DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f);
-	DirectX::XMFLOAT4X4 TmpMatrix;
-	float Matrices[48];
-
-	DirectX::XMStoreFloat4x4(&TmpMatrix, ProjectionMatrix);
-	memcpy(Matrices, &TmpMatrix, sizeof(float) * 16);
 	DirectX::XMStoreFloat4x4(&TmpMatrix, ViewMatrix);
-	memcpy(Matrices + 16, &TmpMatrix, sizeof(float) * 16);
-	DirectX::XMStoreFloat4x4(&TmpMatrix, ModelMatrix);
-	memcpy(Matrices + 32, &TmpMatrix, sizeof(float) * 16);
+	memcpy(Matrices + 16 * 1, &TmpMatrix, sizeof(float) * 16);
 
-	UpdateConstantBuffer(CB, Matrices, sizeof(float) * 48);
+	DirectX::XMMATRIX ModelMatrix = DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f);
+	ModelMatrix *= DirectX::XMMatrixRotationZ(90.0f * 3.1415926f / 180.0f);
+	DirectX::XMStoreFloat4x4(&TmpMatrix, ModelMatrix);
+	memcpy(Matrices + 16 * 2, &TmpMatrix, sizeof(float) * 16);
+
+	DirectX::XMVECTOR Determinant;
+	DirectX::XMMATRIX InverseModelMatrix = DirectX::XMMatrixInverse(&Determinant, ModelMatrix);
+	if (DirectX::XMVectorGetX(Determinant) != 0.0f)
+	{
+		DirectX::XMMATRIX NormalMatrix = DirectX::XMMatrixTranspose(InverseModelMatrix);
+
+		DirectX::XMStoreFloat4x4(&TmpMatrix, ModelMatrix);
+		memcpy(Matrices + 16 * 3, &TmpMatrix, sizeof(float) * 16);
+	}
+
+	UpdateConstantBuffer(CB, Matrices, sizeof(float) * 16 * 4);
 	EndCommandList();
 	WaitForComplectionOfCommandList();
-
-
-	D3D12_VERTEX_BUFFER_VIEW VBOs[] =
-	{
-		StaticMeshComp.mVBV
-	};
 
 	ShowWindow(Hwnd, InShowCmd);
 	UpdateWindow(Hwnd);
@@ -149,12 +156,8 @@ int WINAPI WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR LpCmdLine
 			CommandList->SetGraphicsRoot32BitConstants(0, 4, color, 0);
 			CommandList->SetGraphicsRootConstantBufferView(1, CB->GetGPUVirtualAddress());
 			CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			CommandList->IASetVertexBuffers(0, 1, VBOs);
-			for (auto Iter = StaticMeshComp.mSubMeshes.begin(); Iter != StaticMeshComp.mSubMeshes.end(); ++Iter)
-			{
-				CommandList->IASetIndexBuffer(&Iter->second->mIBV);
-				CommandList->DrawIndexedInstanced(Iter->second->mIndexCount, 1, 0, 0, 0);
-			}
+
+			StaticMeshComp.Render(CommandList);
 
 			EndRenderToSwapChain(CommandList);
 			EndCommandList();

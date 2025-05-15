@@ -26,6 +26,7 @@ class StaticMeshComponent
 public:
 
 	void InitFromFile(ID3D12GraphicsCommandList* InCommandList, const char* InFilePath);
+	void Render(ID3D12GraphicsCommandList* InCommandList);
 	void SetVertexCount(int InVertexCount);
 	void SetVertexPosition(int InIndex, float InX, float InY, float InZ, float InW);
 	void SetVertexTexcoord(int InIndex, float InX, float InY, float InZ, float InW);

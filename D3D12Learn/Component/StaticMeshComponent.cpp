@@ -54,6 +54,29 @@ void StaticMeshComponent::InitFromFile(ID3D12GraphicsCommandList* InCommandList,
 	}
 }
 
+void StaticMeshComponent::Render(ID3D12GraphicsCommandList* InCommandList)
+{
+	D3D12_VERTEX_BUFFER_VIEW VBVs[] =
+	{
+		mVBV
+	};
+
+	InCommandList->IASetVertexBuffers(0, 1, VBVs);
+
+	if (mSubMeshes.empty())
+	{
+		InCommandList->DrawInstanced(mVertexCount, 1, 0, 0);
+	}
+	else
+	{
+		for (auto Iter = mSubMeshes.begin(); Iter != mSubMeshes.end(); ++Iter)
+		{
+			InCommandList->IASetIndexBuffer(&Iter->second->mIBV);
+			InCommandList->DrawIndexedInstanced(Iter->second->mIndexCount, 1, 0, 0, 0);
+		}
+	}
+}
+
 void StaticMeshComponent::SetVertexCount(int InVertexCount)
 {
 	mVertexCount = InVertexCount;
