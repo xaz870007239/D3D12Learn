@@ -10,6 +10,8 @@ struct VSOut
 {
     float4 position : SV_POSITION;
     float4 normal   : NORMAL;
+    float4 texcoord : TEXCOORD0;
+    float4 positionWS : TEXCOORD1; 
 };
 
 static const float PI = 3.141592;
@@ -35,6 +37,8 @@ VSOut VS_Main(VertexData input)
     float4 positionVS = mul(ViewMatrix, positionWS);
     output.position = mul(ProjectionMatrix, positionVS);
     output.normal = mul(IT_ModelMatrix, input.normal);
+    output.texcoord = input.texcoord;
+    output.positionWS = positionWS;
     return output;
 }
 
@@ -57,7 +61,17 @@ float4 PS_Main(VSOut input) : SV_TARGET
     float3 diffuseColor = diffuseLightColor * diffuseIntensity;
 
     float3 specularColor = float3(0.0f, 0.0f, 0.0f);
+    if (diffuseIntensity > 0.0f)
+    {
+        float3 cameraPosWS = float3(0.0f, 0.0f, 0.0f);
+        float3 V = normalize(cameraPosWS.xyz - input.positionWS.xyz);
+        float3 R = reflect(-L, N);
+        float specularIntensity = pow(max(0.0f, dot(V, R)), 32.0f);
+
+        specularColor = float3(1.0f, 1.0f, 1.0f) * specularIntensity;
+    }
 
     float3 surfaceColor = ambientColor + diffuseColor + specularColor;
+
     return float4(surfaceColor, 1.0f);
 }
